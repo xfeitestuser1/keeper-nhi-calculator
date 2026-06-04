@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KeeperPAM 見積試算ツール</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Keeper brand colors */
+  --keeper-navy:     #0D1B2E;
+  --keeper-navy-mid: #152540;
+  --keeper-navy-lt:  #1E3252;
+  --keeper-navy-card:#1A2D48;
+  --keeper-yellow:   #F6C90E;
+  --keeper-yellow-dk:#D4A800;
+  --keeper-yellow-lt:#FEF3AC;
+  --keeper-white:    #FFFFFF;
+  --keeper-off-white:#F0F4F8;
+  --keeper-gray:     #8FA3BA;
+  --keeper-gray-lt:  #C4D3E0;
+  --keeper-border:   rgba(255,255,255,0.10);
+  --keeper-border-md:rgba(255,255,255,0.18);
+
+  /* semantic */
+  --green:  #27B57A;
+  --green-bg: rgba(39,181,122,0.15);
+  --blue:   #3D9BE9;
+  --blue-bg: rgba(61,155,233,0.15);
+  --red:    #E85555;
+  --red-bg: rgba(232,85,85,0.15);
+  --amber:  #F59E0B;
+  --amber-bg: rgba(245,158,11,0.15);
+
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--keeper-navy);
+  color: var(--keeper-white);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.page-header {
+  background: var(--keeper-navy-mid);
+  border-bottom: 1px solid var(--keeper-border);
+  padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 62px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo-area { display: flex; align-items: center; gap: 12px; }
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--keeper-yellow);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-icon svg { width: 19px; height: 19px; }
+.logo-name { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; color: var(--keeper-white); }
+.logo-sub {
+  font-size: 12px; color: var(--keeper-gray);
+  padding-left: 12px; margin-left: 12px;
+  border-left: 1px solid var(--keeper-border-md);
+}
+.header-actions { display: flex; gap: 8px; }
+.btn-ghost {
+  padding: 6px 14px; border-radius: 8px; font-size: 13px;
+  background: transparent; border: 1px solid var(--keeper-border-md);
+  color: var(--keeper-gray-lt); cursor: pointer; font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-ghost:hover { background: var(--keeper-navy-lt); color: var(--keeper-white); }
+.btn-primary {
+  padding: 6px 18px; border-radius: 8px; font-size: 13px;
+  background: var(--keeper-yellow); border: none;
+  color: var(--keeper-navy); cursor: pointer; font-family: inherit;
+  font-weight: 700; letter-spacing: 0.01em;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-primary:hover { background: var(--keeper-yellow-dk); }
+.btn-primary:active { transform: scale(0.97); }
+
+/* ── Main ── */
+.main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+.page-eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--keeper-yellow);
+  margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+}
+.page-eyebrow::before {
+  content: ""; display: block; width: 18px; height: 2px;
+  background: var(--keeper-yellow); border-radius: 1px;
+}
+.page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 4px; }
+.page-desc { font-size: 14px; color: var(--keeper-gray); margin-bottom: 2rem; }
+
+/* ── Summary cards ── */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 12px; margin-bottom: 1.25rem;
+}
+.metric-card {
+  background: var(--keeper-navy-card);
+  border: 1px solid var(--keeper-border);
+  border-radius: var(--radius-lg); padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+.metric-card:hover { border-color: var(--keeper-border-md); }
+.metric-card.highlight { border-color: rgba(246,201,14,0.4); }
+.metric-label {
+  font-size: 11px; color: var(--keeper-gray);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.metric-label svg { width: 14px; height: 14px; }
+.metric-value {
+  font-size: 32px; font-weight: 700;
+  letter-spacing: -0.04em; line-height: 1;
+  color: var(--keeper-white);
+}
+.metric-value.yellow { color: var(--keeper-yellow); }
+
+/* ── Breakdown ── */
+.breakdown-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 12px; margin-bottom: 1.5rem;
+}
+.breakdown-card {
+  background: var(--keeper-navy-card);
+  border: 1px solid var(--keeper-border);
+  border-radius: var(--radius-lg); padding: 16px 18px;
+}
+.bc-label {
+  font-size: 11px; color: var(--keeper-gray);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.bc-big { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+.bc-sub { font-size: 12px; color: var(--keeper-gray); margin-top: 3px; }
+.bar-track {
+  height: 5px; border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  margin-top: 12px; overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 3px; background: var(--keeper-yellow); transition: width 0.4s ease; }
+
+.billing-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.billing-item { flex: 1; min-width: 44px; }
+.billing-item-label { font-size: 11px; color: var(--keeper-gray); margin-bottom: 4px; }
+.billing-item-val { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+.billing-divider { width: 1px; background: var(--keeper-border); margin-bottom: 4px; height: 28px; align-self: flex-end; }
+.payper-breakdown { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--keeper-border); }
+.payper-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--keeper-gray); }
+.payper-val { font-weight: 600; color: var(--keeper-yellow); font-family: 'DM Mono', monospace; font-size: 13px; }
+
+/* ── Table ── */
+.table-section {
+  background: var(--keeper-navy-card);
+  border: 1px solid var(--keeper-border);
+  border-radius: var(--radius-lg); overflow: hidden;
+}
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--keeper-border);
+  background: var(--keeper-navy-mid);
+}
+.table-header-title {
+  font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px; color: var(--keeper-white);
+}
+.table-header-title svg { width: 16px; height: 16px; color: var(--keeper-yellow); }
+.count-badge {
+  font-size: 11px; background: rgba(246,201,14,0.15); color: var(--keeper-yellow);
+  padding: 2px 8px; border-radius: 20px; font-weight: 600;
+  font-family: 'DM Mono', monospace; border: 1px solid rgba(246,201,14,0.3);
+}
+.btn-add {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; padding: 6px 14px;
+  border: 1px solid var(--keeper-border-md);
+  border-radius: 8px; background: transparent;
+  color: var(--keeper-gray-lt); cursor: pointer; font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-add:hover { background: var(--keeper-navy-lt); color: var(--keeper-white); }
+.btn-add svg { width: 14px; height: 14px; }
+
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+thead th {
+  padding: 9px 14px; text-align: left;
+  font-size: 11px; font-weight: 600; color: var(--keeper-gray);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--keeper-border);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+th:nth-child(1) { width: 48px; }
+th:nth-child(2) { width: 150px; }
+th:nth-child(3) { width: 110px; }
+th:nth-child(4) { width: 95px; }
+th:nth-child(5) { width: 185px; }
+th:nth-child(6) { width: 120px; }
+th:nth-child(7) { width: 48px; }
+
+tbody tr { transition: background 0.1s; }
+tbody tr:hover td { background: rgba(255,255,255,0.04); }
+td {
+  padding: 9px 14px; border-bottom: 1px solid var(--keeper-border);
+  color: var(--keeper-white); vertical-align: middle;
+  overflow: hidden; white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+.row-num { font-size: 11px; color: var(--keeper-gray); font-family: 'DM Mono', monospace; }
+
+td input, td select {
+  width: 100%; background: transparent; border: none; outline: none;
+  font-size: 13px; color: var(--keeper-white);
+  font-family: 'Noto Sans JP', sans-serif;
+  padding: 2px 4px; border-radius: 5px; transition: background 0.15s; cursor: text;
+}
+td input:focus, td select:focus {
+  background: rgba(246,201,14,0.12);
+  outline: 1.5px solid rgba(246,201,14,0.5);
+}
+td select { cursor: pointer; }
+td select option { background: var(--keeper-navy-mid); color: var(--keeper-white); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.badge-user { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(61,155,233,0.25); }
+.badge-machine { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+.badge-yes { background: var(--green-bg); color: var(--green); border: 1px solid rgba(39,181,122,0.25); }
+.badge-no { background: rgba(255,255,255,0.06); color: var(--keeper-gray); border: 1px solid var(--keeper-border); }
+
+.cell-name { display: flex; flex-direction: column; gap: 3px; }
+.name-input { font-weight: 500 !important; }
+
+.btn-delete {
+  width: 30px; height: 30px; border-radius: 7px;
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--keeper-gray); transition: background 0.15s, color 0.15s;
+}
+.btn-delete:hover { background: var(--red-bg); color: var(--red); }
+.btn-delete svg { width: 14px; height: 14px; pointer-events: none; }
+
+.table-footer {
+  display: flex; gap: 20px; padding: 10px 18px;
+  background: rgba(255,255,255,0.02);
+  border-top: 1px solid var(--keeper-border);
+  flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--keeper-gray); }
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+.empty-state { text-align: center; padding: 3rem 2rem; color: var(--keeper-gray); font-size: 14px; }
+.empty-state svg { width: 32px; height: 32px; margin: 0 auto 12px; display: block; opacity: 0.3; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--keeper-yellow); color: var(--keeper-navy);
+  padding: 10px 18px; border-radius: 10px;
+  font-size: 13px; font-weight: 700;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none; z-index: 9999;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 700px) {
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .breakdown-grid { grid-template-columns: 1fr; }
+  .page-header { padding: 0 1rem; }
+  .main { padding: 1.2rem 1rem 3rem; }
+  .logo-sub { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="logo-area">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--keeper-navy)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <span class="logo-name">KeeperPAM</span>
+    <span class="logo-sub">見積試算ツール</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn-ghost" onclick="clearAll()">リセット</button>
+    <button class="btn-primary" onclick="exportCSV()">CSVエクスポート</button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="page-eyebrow">Keeper Security</div>
+  <div class="page-title">特権ID 見積試算</div>
+  <div class="page-desc">ユーザー・マシンと特権IDを入力すると、課金対象数が自動で集計されます。</div>
+
+  <div class="summary-grid" id="summary-grid"></div>
+  <div class="breakdown-grid" id="breakdown-grid"></div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <div class="table-header-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        </svg>
+        特権IDリスト
+        <span class="count-badge" id="row-count">0</span>
+      </div>
+      <button class="btn-add" onclick="addRow()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        行を追加
+      </button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>ユーザー／マシン</th>
+            <th>アカウント (ID)</th>
+            <th>ローテーション</th>
+            <th>対象リソース</th>
+            <th>Keeper Gateway</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div id="empty-state" class="empty-state" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        レコードがありません。「行を追加」から登録してください。
+      </div>
+    </div>
+    <div class="table-footer">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>ローテーション有</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--keeper-gray)"></span>ローテーション無</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>ユーザーライセンス（ボルト数）</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>マシン（従量課金）</span>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let rows = [
+  { id:1,  name:"ユーザー 1", accountId:"ID 1",  rotation:"有", resource:"サーバＡ",           gateway:"KG 1" },
+  { id:2,  name:"ユーザー 2", accountId:"ID 2",  rotation:"有", resource:"サーバＡ",           gateway:"KG 1" },
+  { id:3,  name:"ユーザー 3", accountId:"ID 3",  rotation:"有", resource:"サーバＡ",           gateway:"KG 1" },
+  { id:4,  name:"ユーザー 4", accountId:"ID 4",  rotation:"有", resource:"サーバＡ",           gateway:"KG 1" },
+  { id:5,  name:"ユーザー 5", accountId:"ID 5",  rotation:"有", resource:"サーバＡ",           gateway:"KG 1" },
+  { id:6,  name:"ユーザー 1", accountId:"ID 6",  rotation:"有", resource:"サーバＢ",           gateway:"KG 1" },
+  { id:7,  name:"ユーザー 2", accountId:"ID 7",  rotation:"有", resource:"サーバＢ",           gateway:"KG 1" },
+  { id:8,  name:"ユーザー 3", accountId:"ID 8",  rotation:"有", resource:"サーバＢ",           gateway:"KG 1" },
+  { id:9,  name:"ユーザー 4", accountId:"ID 9",  rotation:"有", resource:"サーバＢ",           gateway:"KG 1" },
+  { id:10, name:"ユーザー 5", accountId:"ID 10", rotation:"有", resource:"サーバＢ",           gateway:"KG 1" },
+  { id:11, name:"ユーザー 1", accountId:"ID 11", rotation:"無", resource:"ブラウザ管理画面Ａ",  gateway:"KG 1" },
+  { id:12, name:"ユーザー 2", accountId:"ID 12", rotation:"無", resource:"ブラウザ管理画面Ｂ",  gateway:"KG 1" },
+  { id:13, name:"マシン 1",   accountId:"ID 13", rotation:"有", resource:"タスクスケジューラー", gateway:"KG 2" },
+  { id:14, name:"マシン 2",   accountId:"ID 14", rotation:"有", resource:"バックアップ",       gateway:"KG 2" },
+];
+let nextId = 15;
+
+function isUser(name) { return !name.includes("マシン"); }
+
+function calcStats() {
+  const uniqueUsers = new Set(), uniqueResources = new Set(), uniqueGateways = new Set();
+  let rotY = 0, rotN = 0;
+  rows.forEach(r => {
+    if (isUser(r.name)) uniqueUsers.add(r.name);
+    uniqueResources.add(r.resource);
+    uniqueGateways.add(r.gateway);
+    r.rotation === "有" ? rotY++ : rotN++;
+  });
+  const userLic = uniqueUsers.size;
+  const payPer = rotY + uniqueResources.size + uniqueGateways.size;
+  return { total: rows.length, userLic, payPer, resources: uniqueResources.size, gateways: uniqueGateways.size, rotY, rotN };
+}
+
+function renderSummary() {
+  const s = calcStats();
+  document.getElementById("summary-grid").innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        総特権ID数
+      </div>
+      <div class="metric-value yellow">${s.total}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
+        ユーザーライセンス
+      </div>
+      <div class="metric-value">${s.userLic}</div>
+    </div>
+    <div class="metric-card highlight">
+      <div class="metric-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        従量課金対象（合計）
+      </div>
+      <div class="metric-value yellow">${s.payPer}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Keeper Gateway数
+      </div>
+      <div class="metric-value">${s.gateways}</div>
+    </div>
+  `;
+}
+
+function renderBreakdown() {
+  const s = calcStats();
+  const total = s.rotY + s.rotN;
+  const pct = total > 0 ? Math.round(s.rotY / total * 100) : 0;
+  document.getElementById("breakdown-grid").innerHTML = `
+    <div class="breakdown-card">
+      <div class="bc-label">
+        <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-5.96"/></svg>
+        ローテーション有
+      </div>
+      <div class="bc-big" style="color:var(--green)">${s.rotY}</div>
+      <div class="bc-sub">全体の ${pct}%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="breakdown-card">
+      <div class="bc-label">
+        <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        対象リソース数
+      </div>
+      <div class="bc-big" style="color:var(--blue)">${s.resources}</div>
+      <div class="bc-sub">ユニークなリソース</div>
+    </div>
+    <div class="breakdown-card">
+      <div class="bc-label">
+        <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        従量課金 内訳
+      </div>
+      <div class="billing-row" style="margin-top:4px">
+        <div class="billing-item">
+          <div class="billing-item-label">ローテーション有</div>
+          <div class="billing-item-val" style="color:var(--green)">${s.rotY}</div>
+        </div>
+        <div class="billing-divider"></div>
+        <div class="billing-item">
+          <div class="billing-item-label">リソース数</div>
+          <div class="billing-item-val" style="color:var(--blue)">${s.resources}</div>
+        </div>
+        <div class="billing-divider"></div>
+        <div class="billing-item">
+          <div class="billing-item-label">Gateway数</div>
+          <div class="billing-item-val" style="color:var(--blue)">${s.gateways}</div>
+        </div>
+        <div class="billing-divider"></div>
+        <div class="billing-item">
+          <div class="billing-item-label">合計</div>
+          <div class="billing-item-val" style="color:var(--keeper-yellow)">${s.payPer}</div>
+        </div>
+      </div>
+      <div class="payper-breakdown">
+        <div class="payper-row">
+          <span>計算式</span>
+          <span class="payper-val">${s.rotY} + ${s.resources} + ${s.gateways} = ${s.payPer}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getGatewayOptions(current) {
+  const gws = [...new Set([...rows.map(r => r.gateway), "KG 1", "KG 2", "KG 3"])].sort();
+  return gws.map(g => `<option value="${g}"${g===current?" selected":""}>${g}</option>`).join("");
+}
+
+function renderTable() {
+  const tbody = document.getElementById("table-body");
+  const empty = document.getElementById("empty-state");
+  document.getElementById("row-count").textContent = rows.length;
+  if (rows.length === 0) { tbody.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  tbody.innerHTML = rows.map((r, i) => {
+    const typeBadge = isUser(r.name)
+      ? `<span class="badge badge-user">ユーザー</span>`
+      : `<span class="badge badge-machine">マシン</span>`;
+    return `<tr>
+      <td><span class="row-num">${String(i+1).padStart(2,'0')}</span></td>
+      <td><div class="cell-name">
+        <input class="name-input" value="${esc(r.name)}" onchange="upd(${r.id},'name',this.value)" onblur="renderAll()" />
+        ${typeBadge}
+      </div></td>
+      <td><input value="${esc(r.accountId)}" onchange="upd(${r.id},'accountId',this.value)" /></td>
+      <td>
+        <select onchange="upd(${r.id},'rotation',this.value); renderAll()">
+          <option value="有"${r.rotation==="有"?" selected":""}>有</option>
+          <option value="無"${r.rotation==="無"?" selected":""}>無</option>
+        </select>
+      </td>
+      <td><input value="${esc(r.resource)}" onchange="upd(${r.id},'resource',this.value)" onblur="renderAll()" /></td>
+      <td><select onchange="upd(${r.id},'gateway',this.value); renderAll()">${getGatewayOptions(r.gateway)}</select></td>
+      <td><button class="btn-delete" onclick="delRow(${r.id})" title="削除" aria-label="行${i+1}を削除">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+      </button></td>
+    </tr>`;
+  }).join("");
+}
+
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+function upd(id, field, val) { const r = rows.find(x=>x.id===id); if(r){ r[field]=val; renderSummary(); renderBreakdown(); } }
+function renderAll() { renderSummary(); renderBreakdown(); renderTable(); }
+
+function delRow(id) { rows = rows.filter(r=>r.id!==id); renderAll(); }
+
+function addRow() {
+  rows.push({ id: nextId++, name: "ユーザー " + nextId, accountId: "ID " + nextId, rotation: "有", resource: "新規リソース", gateway: "KG 1" });
+  renderAll();
+  setTimeout(() => { const inp = document.querySelectorAll("#table-body tr:last-child input"); if(inp[0]) inp[0].focus(); }, 50);
+}
+
+function clearAll() {
+  if (rows.length === 0 || confirm("すべてのデータをリセットしますか？")) { rows = []; nextId = 1; renderAll(); showToast("リセットしました"); }
+}
+
+function exportCSV() {
+  const s = calcStats();
+  const header = ["No.", "ユーザー／マシン", "アカウント (ID)", "ローテーション有無", "対象リソース", "対象Keeper Gateway"];
+  const body = rows.map((r, i) => [i+1, r.name, r.accountId, r.rotation, r.resource, r.gateway]);
+  const footer = [
+    [],
+    ["課金対象数", s.userLic, "", s.rotY, s.resources, s.gateways],
+    ["", "ユーザーライセンス（ボルト数）", "", "ローテーション有", "ユニークリソース", "ユニークGateway"],
+    [],
+    ["従量課金合計（ローテーション有＋リソース＋Gateway）", "", "", "", "", s.payPer]
+  ];
+  const csv = [header, ...body, ...footer].map(row => row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "KeeperPAM_見積試算.csv"; a.click();
+  showToast("CSVをエクスポートしました");
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+renderAll();
+</script>
+</body>
+</html>
